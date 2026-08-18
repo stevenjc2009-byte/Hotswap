@@ -1,5 +1,4 @@
 #include "detect.h"
-#include "core/mk7titles.h"
 
 #include <3ds.h>
 #include <stdio.h>
@@ -8,52 +7,75 @@
 
 #define MAX_TITLES 1024
 
-static bool scan_media(FS_MediaType media, mk7_install_t *out)
+// Records one hit, unless this game was already found on media that outranks
+// the current one. The game card outranks SD: a card in the slot is the copy
+// the user is about to play, so that is the one the launch jump must target.
+static void record(hs_install_t *out, int *count, int max,
+                   const hs_game_t *game, const hs_title_t *title, bool gamecard)
 {
-    u32 count = 0;
-    if (R_FAILED(AM_GetTitleCount(media, &count)) || count == 0) return false;
-    if (count > MAX_TITLES) count = MAX_TITLES;
-
-    u64 *ids = (u64 *)malloc(sizeof(u64) * count);
-    if (!ids) return false;
-
-    u32 read = 0;
-    if (R_FAILED(AM_GetTitleList(&read, media, count, ids))) {
-        free(ids);
-        return false;
+    hs_install_t *slot = NULL;
+    for (int i = 0; i < *count; i++) {
+        if (out[i].game == game) { slot = &out[i]; break; }
     }
 
-    bool hit = false;
-    for (u32 i = 0; i < read && !hit; i++) {
-        const mk7_title_t *t = mk7_lookup(ids[i]);
-        if (!t) continue;
+    // Already listed, and nothing to gain: either it is already the card copy,
+    // or this hit is just another region of a game we have.
+    if (slot && (slot->on_gamecard || !gamecard)) return;
 
-        out->found = true;
-        out->title_id = t->title_id;
-        out->region = t->region;
-        out->on_gamecard = (media == MEDIATYPE_GAME_CARD);
-        snprintf(out->hex, sizeof(out->hex), "%s", t->hex);
-        hit = true;
+    if (!slot) {
+        if (*count >= max) return;
+        slot = &out[(*count)++];
+    }
+
+    memset(slot, 0, sizeof(*slot));
+    slot->found = true;
+    slot->game = game;
+    slot->title_id = title->title_id;
+    slot->region = title->region;
+    slot->on_gamecard = gamecard;
+    snprintf(slot->hex, sizeof(slot->hex), "%s", title->hex);
+}
+
+static void scan_media(FS_MediaType media, hs_install_t *out, int *count, int max)
+{
+    u32 total = 0;
+    if (R_FAILED(AM_GetTitleCount(media, &total)) || total == 0) return;
+    if (total > MAX_TITLES) total = MAX_TITLES;
+
+    u64 *ids = (u64 *)malloc(sizeof(u64) * total);
+    if (!ids) return;
+
+    u32 read = 0;
+    if (R_FAILED(AM_GetTitleList(&read, media, total, ids))) {
+        free(ids);
+        return;
+    }
+
+    bool gamecard = (media == MEDIATYPE_GAME_CARD);
+    for (u32 i = 0; i < read; i++) {
+        const hs_title_t *t = NULL;
+        const hs_game_t *g = hs_game_by_title(ids[i], &t);
+        if (g) record(out, count, max, g, t, gamecard);
     }
 
     free(ids);
-    return hit;
 }
 
-void mk7_detect_install(mk7_install_t *out)
+int hs_detect_installs(hs_install_t *out, int max)
 {
-    memset(out, 0, sizeof(*out));
-    out->region = "unknown";
+    int count = 0;
+    if (!out || max <= 0) return 0;
 
-    // A cartridge in the slot takes priority: if the user has the card in,
-    // that is the copy they are about to play.
-    if (scan_media(MEDIATYPE_GAME_CARD, out)) return;
-    scan_media(MEDIATYPE_SD, out);
+    // SD first, then the card, so the card's higher rank is applied as an
+    // upgrade rather than depending on scan order.
+    scan_media(MEDIATYPE_SD, out, &count, max);
+    scan_media(MEDIATYPE_GAME_CARD, out, &count, max);
+    return count;
 }
 
-bool mk7_launch(const mk7_install_t *inst)
+bool hs_launch(const hs_install_t *inst)
 {
-    if (!inst->found) return false;
+    if (!inst || !inst->found) return false;
 
     u8 media = inst->on_gamecard ? MEDIATYPE_GAME_CARD : MEDIATYPE_SD;
 

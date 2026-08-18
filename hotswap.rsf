@@ -1,19 +1,19 @@
-# makerom spec for the Model Kit CIA.
+# makerom spec for the Hotswap CIA.
 #
 # Adapted from Universal-Team/Universal-Updater's app/build-cia.rsf, which is a
 # known-good shipping homebrew spec. Only the identity, the memory settings and
 # the RomFs section were changed:
 #
-#   * Title / ProductCode / UniqueId  - this game, not that one.
+#   * Title / ProductCode / UniqueId  - this app, not that one.
 #   * RomFs                           - removed; this app has no baked assets.
 #   * SaveDataSize                    - 0KB; all state lives on the SD card in
-#                                       /mk7mods, not in title save data.
+#                                       /hotswap/<game>/, not in title save data.
 #   * SystemMode                      - 64MB, the retail Old 3DS budget this
 #                                       project has been built and measured
 #                                       against from the start.
 #
 # The permission, syscall and service lists are left exactly as the template had
-# them. They are wider than this game needs, but they are the proven-working set;
+# them. They are wider than this app needs, but they are the proven-working set;
 # trimming them is a way to make a title that installs and then crashes.
 
 BasicInfo:

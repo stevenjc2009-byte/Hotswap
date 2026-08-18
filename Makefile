@@ -22,7 +22,7 @@ APP_AUTHOR  := Hotswap
 # Build with DEV=1 to enable the L+R emulator test fixtures. Release builds
 # leave that code out entirely.
 ifeq ($(DEV),1)
-DEVFLAGS := -DMK7SWAP_DEV
+DEVFLAGS := -DHOTSWAP_DEV
 endif
 
 #---------------------------------------------------------------------------------

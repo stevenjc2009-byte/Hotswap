@@ -1,28 +1,40 @@
-// Runtime detection of the installed copy of Mario Kart 7.
+// Runtime detection of which supported games this console actually has.
 //
-// Nothing here is hardcoded to one console. The title list is queried from the
-// system, so a European cartridge, a Japanese eShop copy and an American SD
-// install all resolve correctly on the same build.
+// Nothing here is hardcoded to one console or one region. The title list is
+// queried from the system and matched against the registry in core/games.h, so
+// a European cartridge, a Japanese eShop copy and an American SD install all
+// resolve correctly on the same build.
+//
+// Only games that are really installed come back. That is deliberate: the game
+// list must never show something the user cannot pick.
 
-#ifndef MK7SWAP_DETECT_H
-#define MK7SWAP_DETECT_H
+#ifndef HOTSWAP_DETECT_H
+#define HOTSWAP_DETECT_H
 
 #include <stdbool.h>
 #include <stdint.h>
 
+#include "core/games.h"
+
+#define HS_MAX_INSTALLS HS_GAME_COUNT
+
 typedef struct {
     bool found;
+    const hs_game_t *game;   // registry entry - never NULL when found
     uint64_t title_id;
     char hex[17];
     const char *region;      // "Europe", "Americas", ...
     bool on_gamecard;        // affects which media the launch jump targets
-} mk7_install_t;
+} hs_install_t;
 
-// Scans the game card first, then SD/NAND titles. First match wins.
-void mk7_detect_install(mk7_install_t *out);
+// Fills `out` with one entry per supported game found on this console, and
+// returns how many. A game is listed once even if several of its regions are
+// present; the game card wins over an SD install, because a card in the slot is
+// the copy the user is about to play.
+int hs_detect_installs(hs_install_t *out, int max);
 
-// Boots the detected copy of Mario Kart 7. Does not return on success.
-// Returns false if the jump could not be prepared.
-bool mk7_launch(const mk7_install_t *inst);
+// Boots one detected game. Does not return on success. Returns false if the
+// jump could not be prepared.
+bool hs_launch(const hs_install_t *inst);
 
 #endif
