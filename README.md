@@ -19,9 +19,13 @@ can be added.
 
 Works on Old 3DS, New 3DS, 2DS and New 2DS XL.
 
-> **Status: not yet tested on real hardware.** The swap engine is covered by
-> 237 automated tests and an 18-check on-device self test in an emulator, but
-> no physical console has run it. Treat this as a beta and back up your SD card.
+> **Status: beta. Back up your SD card.** The swap engine is covered by 237
+> automated tests and an 18-check on-device self test in an emulator.
+>
+> Version 1.0.0 hung the console when it launched a game, and has been
+> withdrawn — if you installed it, replace it with this build. That fault is
+> fixed here, but the fix itself has not been confirmed on a physical console
+> yet, because the bug is in a code path an emulator cannot reproduce.
 
 ## Requirements
 
@@ -48,16 +52,16 @@ setting.
 
 ## Install
 
-**[Download `hotswap1.0.0.cia`](https://github.com/stevenjc2009-byte/Hotswap/releases/download/v1.0.0/hotswap1.0.0.cia)** — or scan this with FBI.
+**[Download `hotswap1.1.0.cia`](https://github.com/stevenjc2009-byte/Hotswap/releases/download/v1.1.0/hotswap1.1.0.cia)** — or scan this with FBI.
 
 <p align="center">
-  <img src="docs/install-qr.png" width="220" alt="QR code linking to hotswap1.0.0.cia">
+  <img src="docs/install-qr.png" width="220" alt="QR code linking to hotswap1.1.0.cia">
 </p>
 
 **With the QR code:** open FBI on your 3DS, choose **Remote Install → Scan QR
 Code**, and point the camera at the image above.
 
-**By hand:** copy `hotswap1.0.0.cia` to your SD card, open FBI, browse to it and
+**By hand:** copy `hotswap1.1.0.cia` to your SD card, open FBI, browse to it and
 install.
 
 Either way it appears on the HOME Menu when it is done. See

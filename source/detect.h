@@ -33,8 +33,10 @@ typedef struct {
 // the copy the user is about to play.
 int hs_detect_installs(hs_install_t *out, int max);
 
-// Boots one detected game. Does not return on success. Returns false if the
-// jump could not be prepared.
+// Arms the jump into one detected game. Returns immediately: the jump itself is
+// performed by libctru during aptExit(), so the caller must leave the main loop
+// and let main's normal shutdown run. Returns false only if `inst` is unusable,
+// in which case nothing has been armed and the app can carry on.
 bool hs_launch(const hs_install_t *inst);
 
 #endif

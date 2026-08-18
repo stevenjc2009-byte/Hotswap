@@ -73,17 +73,20 @@ int hs_detect_installs(hs_install_t *out, int max)
     return count;
 }
 
+// Arms the jump; it happens later, during aptExit(), on the way out of main.
+//
+// This deliberately does NOT call APT_PrepareToDoApplicationJump and
+// APT_DoApplicationJump itself. libctru issues those two commands (APT 0x31 and
+// 0x32) from inside aptExit, gated on the state aptSetChainloader writes -
+// firing them by hand mid-run leaves a jump pending that libctru knows nothing
+// about, and it then runs its normal shutdown handshake on top of it. The
+// console ends up on a black screen with the HOME button dead and only a hard
+// reset gets out. Handing the target to libctru instead keeps one exit path.
 bool hs_launch(const hs_install_t *inst)
 {
     if (!inst || !inst->found) return false;
 
     u8 media = inst->on_gamecard ? MEDIATYPE_GAME_CARD : MEDIATYPE_SD;
-
-    if (R_FAILED(APT_PrepareToDoApplicationJump(0, inst->title_id, media))) return false;
-
-    u8 param[0x300] = {0};
-    u8 hmac[0x20] = {0};
-    if (R_FAILED(APT_DoApplicationJump(param, sizeof(param), hmac))) return false;
-
-    return true;   // not reached in practice - the system takes over
+    aptSetChainloader(inst->title_id, media);
+    return true;
 }

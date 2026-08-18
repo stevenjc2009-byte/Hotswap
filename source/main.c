@@ -317,19 +317,16 @@ int main(int argc, char **argv)
             continue;
         }
 
-        // Swap succeeded - hand straight over to the game.
-        ui_exit();
-        plat_3ds_exit();
+        // Swap succeeded - arm the jump and leave the loop. Nothing is torn
+        // down here on purpose: the single shutdown below is the only exit
+        // path, and libctru performs the jump inside the aptExit() at the end
+        // of it. Tearing the screen and the SD archive down early and jumping
+        // by hand is what black-screened the console with HOME dead.
         if (!hs_launch(&installs[open_game])) {
-            // The jump failed, so come back up and say so rather than sitting
-            // on a black screen.
-            ui_init();
-            plat_3ds_init();
             st.error = "Swapped, but could not start the game.";
             continue;
         }
-        amExit();
-        return 0;
+        break;
     }
 
     ui_exit();

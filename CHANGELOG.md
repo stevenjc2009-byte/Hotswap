@@ -4,6 +4,28 @@ All notable changes to Hotswap are recorded here. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-08-19
+
+### Fixed
+
+- **Launching a game no longer hangs the console.** In 1.0.0, touching any row
+  left the console on a black screen with the HOME button dead, and only a hard
+  reset recovered it. Hotswap was firing the title jump itself
+  (`APT_PrepareToDoApplicationJump` / `APT_DoApplicationJump`) part-way through
+  running, but libctru performs that jump during its own shutdown. The result
+  was a jump pending that the library knew nothing about, followed by a normal
+  shutdown on top of it. Hotswap now hands the target to libctru
+  (`aptSetChainloader`) and leaves through the one ordinary exit path.
+
+  **Your SD card was never at risk from this.** The swap finished before the
+  launch was ever attempted, and no mod files are touched by the launch step.
+
+### Changed
+
+- The "Swapped, but could not start the game" message can no longer appear.
+  There is nothing left that can fail between the swap finishing and the game
+  starting.
+
 ## [1.0.0] - 2026-08-19
 
 First public release.
@@ -52,4 +74,5 @@ First public release.
 - **Not yet tested on physical hardware.** Treat this release as a beta and
   back up your SD card before using it.
 
+[1.1.0]: https://github.com/stevenjc2009-byte/Hotswap/releases/tag/v1.1.0
 [1.0.0]: https://github.com/stevenjc2009-byte/Hotswap/releases/tag/v1.0.0
