@@ -1,0 +1,15 @@
+# devkitPro build output
+build/
+*.elf
+*.smdh
+*.banner
+*.3dsx
+*.cia
+
+# host test binaries
+test_core
+test_core.exe
+*.exe
+
+# emulator/device capture
+shot_*.png
