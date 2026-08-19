@@ -4,6 +4,49 @@ All notable changes to Hotswap are recorded here. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-08-19
+
+### Fixed
+
+- **CTGP-7 no longer reads "Not installed" on a console that plainly has it.**
+  Hotswap was looking for CTGP-7's plugin where Hotswap parks plugins,
+  `/luma/plugins/<TITLEID>/`. CTGP-7 does not put it there. It keeps it at its
+  own fixed path, `/CTGP-7/resources/CTGP-7.3gx`, and tells the plugin loader
+  about it at launch time. That file is now what the check looks at.
+
+- **Switching to CTGP-7 now actually starts CTGP-7.** Selecting it moves no
+  files, because there are none to move. Instead, pressing **Launch** points
+  Luma3DS's plugin loader (`plg:ldr`) at CTGP-7's plugin for that one launch —
+  which is exactly what CTGP-7's own launcher does. Switching back to Stock
+  needs no action at all: the instruction is consumed by the launch it was
+  armed for, and the next one gets nothing.
+
+  This needs Luma's **plugin loader** switched on as well as game patching. If
+  it is off, Hotswap says so rather than booting the game stock and leaving you
+  to wonder why the mod did nothing.
+
+### Added
+
+- **An options menu.** **SELECT** opens it from anywhere; **B** puts you back
+  exactly where you were.
+
+- **Check for updates**, in that menu. It asks GitHub for the newest release,
+  and if that is newer than the copy you are running it downloads the release's
+  CIA, installs it, and restarts Hotswap into the new version. Already on the
+  newest release? It says so and changes nothing.
+
+- **Every game is scanned for mods when the app opens**, so a mod installed
+  since last time shows up without having to go looking for it. Each game's row
+  says what is waiting for it — "Europe - SD - CTGP-7 + 2 mods".
+
+- **Each game's own icon art**, drawn at the right-hand end of its row.
+
+### Changed
+
+- **Choosing a mod no longer closes the app.** It swaps, says "Swap complete",
+  and leaves you on the list. Playing is now a separate decision, made with the
+  **Launch** button under the list.
+
 ## [1.1.0] - 2026-08-19
 
 ### Fixed
@@ -74,5 +117,6 @@ First public release.
 - **Not yet tested on physical hardware.** Treat this release as a beta and
   back up your SD card before using it.
 
+[1.2.0]: https://github.com/stevenjc2009-byte/Hotswap/releases/tag/v1.2.0
 [1.1.0]: https://github.com/stevenjc2009-byte/Hotswap/releases/tag/v1.1.0
 [1.0.0]: https://github.com/stevenjc2009-byte/Hotswap/releases/tag/v1.0.0

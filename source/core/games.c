@@ -19,6 +19,7 @@ const hs_game_t HS_GAMES[HS_GAME_COUNT] = {
         .community = "CTGP-7",
         .community_slug = "ctgp7",
         .community_dir = "CTGP-7",
+        .community_plugin = "CTGP-7/resources/CTGP-7.3gx",
         .titles = MK7_TITLES,
         .title_count = (int)(sizeof(MK7_TITLES) / sizeof(MK7_TITLES[0])),
     },

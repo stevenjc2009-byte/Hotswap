@@ -7,6 +7,28 @@
 
 #define MAX_TITLES 1024
 
+// An update is a separate title sharing the game's low id under category
+// 0x000E, and it always installs to SD - even for a cartridge.
+#define UPDATE_TID_MASK 0x0000000E00000000ULL
+
+// The version a plugin has to treat the game as: the game's own, unless an
+// update raises it. Returns 0 when neither title can be read, which callers
+// must treat as "unknown" rather than "oldest".
+static uint16_t installed_version(FS_MediaType media, uint64_t title_id)
+{
+    AM_TitleEntry e;
+    uint16_t v = 0;
+
+    uint64_t id = title_id;
+    if (R_SUCCEEDED(AM_GetTitleInfo(media, 1, &id, &e))) v = e.version;
+
+    uint64_t upd = title_id | UPDATE_TID_MASK;
+    if (R_SUCCEEDED(AM_GetTitleInfo(MEDIATYPE_SD, 1, &upd, &e)) && e.version > v)
+        v = e.version;
+
+    return v;
+}
+
 // Records one hit, unless this game was already found on media that outranks
 // the current one. The game card outranks SD: a card in the slot is the copy
 // the user is about to play, so that is the one the launch jump must target.
@@ -33,6 +55,8 @@ static void record(hs_install_t *out, int *count, int max,
     slot->title_id = title->title_id;
     slot->region = title->region;
     slot->on_gamecard = gamecard;
+    slot->version = installed_version(gamecard ? MEDIATYPE_GAME_CARD : MEDIATYPE_SD,
+                                      title->title_id);
     snprintf(slot->hex, sizeof(slot->hex), "%s", title->hex);
 }
 

@@ -35,6 +35,16 @@ typedef struct {
     const char *community_slug; // mod folder name, e.g. "ctgp7"
     const char *community_dir;  // SD folder whose presence proves it is installed
 
+    // Set when the community mod does NOT install as an ordinary 3GX plugin
+    // under /luma/plugins/<TITLEID>/, but keeps its plugin at a fixed path of
+    // its own and expects to be pointed at it just before the game boots.
+    // CTGP-7 works this way. When this is set, the mod counts as installed if
+    // this file is present, and selecting it moves no files at all - the switch
+    // happens at launch instead. NULL for a mod that is an ordinary folder swap.
+    //
+    // SD-relative, no leading slash.
+    const char *community_plugin;
+
     const hs_title_t *titles;
     int title_count;
 } hs_game_t;

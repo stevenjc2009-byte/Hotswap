@@ -19,7 +19,7 @@ can be added.
 
 Works on Old 3DS, New 3DS, 2DS and New 2DS XL.
 
-> **Status: beta. Back up your SD card.** The swap engine is covered by 237
+> **Status: beta. Back up your SD card.** The swap engine is covered by 248
 > automated tests and an 18-check on-device self test in an emulator.
 >
 > Version 1.0.0 hung the console when it launched a game, and has been
@@ -52,20 +52,24 @@ setting.
 
 ## Install
 
-**[Download `hotswap1.1.0.cia`](https://github.com/stevenjc2009-byte/Hotswap/releases/download/v1.1.0/hotswap1.1.0.cia)** — or scan this with FBI.
+**[Download `hotswap1.2.0.cia`](https://github.com/stevenjc2009-byte/Hotswap/releases/download/v1.2.0/hotswap1.2.0.cia)** — or scan this with FBI.
 
 <p align="center">
-  <img src="docs/install-qr.png" width="220" alt="QR code linking to hotswap1.1.0.cia">
+  <img src="docs/install-qr.png" width="220" alt="QR code linking to hotswap1.2.0.cia">
 </p>
 
 **With the QR code:** open FBI on your 3DS, choose **Remote Install → Scan QR
 Code**, and point the camera at the image above.
 
-**By hand:** copy `hotswap1.1.0.cia` to your SD card, open FBI, browse to it and
+**By hand:** copy `hotswap1.2.0.cia` to your SD card, open FBI, browse to it and
 install.
 
 Either way it appears on the HOME Menu when it is done. See
 [CHANGELOG.md](CHANGELOG.md) for what is in this version.
+
+**After this, you only need to do that once.** Press **SELECT** inside the app
+and choose **Check for updates** — it fetches the newest release from GitHub,
+installs it and restarts itself.
 
 ## Using it
 
@@ -78,9 +82,21 @@ Two screens, both driven by the touch screen:
    community mod for that game, then every mod folder of your own. The live
    one is marked **ACTIVE**.
 
-Touch a mod and the swap happens, then the game starts. **B** goes back to the
-game list, **START** exits. If there are more mods than fit, **Up / Down**
+Touch a mod and the swap happens straight away — the app stays open and says
+**Swap complete**. Playing is a separate decision: press **Launch** at the
+bottom of the mod list when you are ready.
+
+**B** goes back to the game list, **START** exits, and **SELECT** opens the
+options menu from either screen. If there are more mods than fit, **Up / Down**
 scroll the list.
+
+## Options
+
+**SELECT** opens it, **B** puts you back exactly where you were.
+
+**Check for updates** asks GitHub for the newest release. If there is one, it
+downloads it, installs it and restarts the app into the new version. If you are
+already on the newest, it says so and changes nothing.
 
 ## How it works
 
@@ -96,13 +112,28 @@ This app parks every mod under `/hotswap/<game>/` — one subtree per game, so
 games never see each other's files — and moves the one you pick into place:
 
 ```
-/hotswap/mk7/ctgp7/plugins/       -> /luma/plugins/<TITLEID>/
 /hotswap/mk7/custom/layeredfs/    -> /luma/titles/<TITLEID>/
 /hotswap/mk7/<yours>/layeredfs/   -> /luma/titles/<TITLEID>/
+/hotswap/mk7/<yours>/plugins/     -> /luma/plugins/<TITLEID>/
 ```
 
 Nothing is ever copied — folders are **renamed**, which on an SD card is
 instant no matter how big the mod is, and cannot be interrupted half-written.
+
+### CTGP-7 is the exception
+
+CTGP-7 does not keep its plugin in the folder above. It keeps it at
+`/CTGP-7/resources/CTGP-7.3gx` and is loaded because its own launcher tells
+Luma's plugin loader where to find it. So nothing is renamed for CTGP-7 —
+choosing it and pressing **Launch** gives the plugin loader that same
+instruction for that one launch, which is exactly what CTGP-7's launcher does.
+
+Switching back to Stock needs no cleanup: the instruction only applies to the
+launch it was given for, so the next one gets nothing.
+
+This is the part that needs Luma's **plugin loader** turned on as well as game
+patching. If it is off, the app says so instead of booting the game stock and
+leaving you wondering why nothing changed.
 
 The title ID is detected automatically. All four Mario Kart 7 regions
 (Japan, Europe, Americas, Korea) and both cartridge and digital copies work
@@ -183,7 +214,11 @@ make cia DEV=1
 | `source/core/games.c` | The registry of supported games and their title IDs. |
 | `source/plat_3ds.c` | Hardware filesystem layer (`FSUSER_RenameDirectory`). |
 | `source/detect.c` | Finds which supported games this console has. |
-| `source/ui.c` | Bottom-screen touch UI — one scrolling list, both screens. |
+| `source/plgldr.c` | Client for Luma3DS's plugin loader service, `plg:ldr`. |
+| `source/ctgp7.c` | Arms the plugin loader with CTGP-7's plugin at launch. |
+| `source/update.c` | Check for updates — fetches and installs the newest release. |
+| `source/version.h` | The version this build calls itself. Bump it with the changelog. |
+| `source/ui.c` | Bottom-screen touch UI — one scrolling list, every screen. |
 | `test/` | Host test harness, including rename fault injection. |
 | `tools/make_art.py` | Regenerates the icon, banner and logo. |
 
@@ -191,6 +226,6 @@ make cia DEV=1
 
 - **Luma3DS** — the custom firmware whose LayeredFS and plugin loader make all
   of this possible.
-- **CTGP-7** by PabloMK7 and the CTGP-7 team. This app does not bundle,
-  modify or redistribute any part of CTGP-7 — it only moves the plugin you
-  already installed into and out of the folder Luma reads.
+- **CTGP-7** by PabloMK7 and the CTGP-7 team. This app does not bundle, modify
+  or redistribute any part of CTGP-7 — it only points Luma's plugin loader at
+  the copy you already installed, the same way CTGP-7's own launcher does.

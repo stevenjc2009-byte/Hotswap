@@ -25,6 +25,11 @@ typedef struct {
     char hex[17];
     const char *region;      // "Europe", "Americas", ...
     bool on_gamecard;        // affects which media the launch jump targets
+
+    // Highest of the game's own version and any installed update's. A plugin
+    // has to know which build of the game it is patching, so this is passed on
+    // when one is armed. 0 means neither could be read.
+    uint16_t version;
 } hs_install_t;
 
 // Fills `out` with one entry per supported game found on this console, and

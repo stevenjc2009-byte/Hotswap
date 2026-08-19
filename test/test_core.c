@@ -851,6 +851,59 @@ static void t_reselect_active_keeps_slot_owner(void)
     check(count_content(ROOT, "CTGP-PLUGIN") == 1, "exactly one copy of the plugin");
 }
 
+// The real CTGP-7. It never puts anything under /luma/plugins/ - it keeps its
+// plugin at its own fixed path and is pointed at it just before the game boots.
+// This is the exact card steve reported: CTGP-7 plainly installed, and the app
+// calling it "Not installed" because it was only ever looking where it parks
+// things itself.
+//
+// Selecting it must also be a no-op on disk. There is nothing to rename, so the
+// only thing that may change is which mod the state file calls active - and any
+// other mod that was live has to be parked out of the way, or its files would
+// still be in place underneath CTGP-7.
+static void t_ctgp_plugin_at_own_path(void)
+{
+    printf("CTGP-7 installed at its own path, nothing under luma/plugins\n");
+    sd_reset();
+
+    mkfile("CTGP-7/resources/CTGP-7.3gx", "REAL-CTGP-PLUGIN");
+    mkfile("luma/titles/" TID "/romfs/theirs.szs", "THEIR-MOD");
+
+    hs_ctx_t c;
+    hs_ctx_init(&c, ROOT, "mk7", TID);
+    hs_ensure_layout(&c);
+    hs_adopt_if_needed(&c);
+
+    check(hs_community_available(&c),
+          "CTGP-7 offered when only its own plugin file is present");
+
+    check(hs_swap_to(&c, HS_SLUG_CTGP) == SWAP_OK, "swap to ctgp7 succeeds");
+
+    char active[HS_MAX_SLUG];
+    hs_read_active(&c, active, sizeof(active));
+    check_eq_str(active, HS_SLUG_CTGP, "ctgp7 recorded as active");
+
+    // Its plugin is not ours to move, and moving it would break the launcher
+    // the user may still want to use.
+    check(rel_has("CTGP-7/resources/CTGP-7.3gx", "REAL-CTGP-PLUGIN"),
+          "CTGP-7's own plugin left exactly where it was");
+    check(count_content(ROOT, "REAL-CTGP-PLUGIN") == 1,
+          "exactly one copy of CTGP-7's plugin");
+
+    // The other mod cannot be left live underneath it.
+    check(!rel_exists("luma/titles/" TID "/romfs/theirs.szs"), "their mod moved out");
+    check(rel_has("hotswap/mk7/existing/layeredfs/romfs/theirs.szs", "THEIR-MOD"),
+          "their mod parked under existing");
+
+    // And back to stock, which for CTGP-7 means simply not arming it.
+    check(hs_swap_to(&c, HS_SLUG_STOCK) == SWAP_OK, "swap to stock succeeds");
+    hs_read_active(&c, active, sizeof(active));
+    check_eq_str(active, HS_SLUG_STOCK, "stock recorded as active");
+    check(rel_has("CTGP-7/resources/CTGP-7.3gx", "REAL-CTGP-PLUGIN"),
+          "CTGP-7's plugin still untouched after going back to stock");
+    check(hs_community_available(&c), "CTGP-7 still offered from stock");
+}
+
 // Guard against a check that cannot fail: deliberately break the tree and
 // confirm the same assertions go red.
 static void t_harness_can_fail(void)
@@ -907,6 +960,7 @@ int main(void)
     t_existing_then_cycle();
     t_state_file_corrupt();
     t_adopt_ctgp_alongside_own_mod();
+    t_ctgp_plugin_at_own_path();
     t_reselect_active_keeps_slot_owner();
 
     t_harness_can_fail();

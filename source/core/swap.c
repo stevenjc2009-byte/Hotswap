@@ -467,6 +467,17 @@ bool hs_community_available(const hs_ctx_t *ctx)
 {
     if (!community_installed(ctx)) return false;
 
+    // A mod that keeps its plugin at its own fixed path never puts anything
+    // under /luma/plugins/, so that file is the whole test. This is the case
+    // that made CTGP-7 read "Not installed" on a console that plainly had it:
+    // the checks below looked only where Hotswap parks things, and CTGP-7 does
+    // not park anything.
+    if (ctx->def->community_plugin) {
+        char cp[PLAT_MAX_PATH];
+        joinp(cp, sizeof(cp), ctx->root, ctx->def->community_plugin);
+        if (plat_exists(cp)) return true;
+    }
+
     // The folder alone is not enough - an uninstall can leave it behind. There
     // must also be a plugin somewhere, either live or parked under our slug.
     // This asks who owns the plugin slot, not which button is highlighted:
